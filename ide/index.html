@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>c-ide</title>
+    <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+    <link href="codemirror/theme/dracula.css" rel="stylesheet" />
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: white;
+        }
+
+        .container {
+            padding-top: 5px;
+            padding-left: 5px;
+            padding-right: 5px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        button {
+            width: 85px;
+            height: 60px;
+            border: 1px solid rgb(189, 242, 189);
+            border-radius: 100px;
+            background-color: green;
+            margin-right: 150px;
+            margin-left: 150px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #04AA6D;
+        }
+
+        .sidebar {
+            padding: 0;
+            display: flex;
+            border: 1px solid white;
+            flex: 1;
+        }
+
+        .left {
+            width: 50vw;
+            position: relative;
+            flex: 1;
+            overflow-y: hidden;
+            background-color: rgba(40, 42, 54, 255);
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            font-size: 17px;
+            box-shadow: 1px 2px 2px rgba(40, 42, 54, 255);
+        }
+
+        .code-container {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .right {
+            width: 50vw;
+            overflow: auto;
+            padding-left: 15px;
+            padding-right: 15px;
+            background-color: rgba(40, 42, 54, 255);
+            border-radius: 10px;
+            box-shadow: 1px 2px 2px rgba(40, 42, 54, 255);
+        }
+
+        .separator {
+            cursor: col-resize;
+            width: 10px;
+            height: 100%;
+            background-color: rgb(255, 255, 255);
+        }
+
+        .textarea-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+            color: #fff;
+        }
+
+        .textarea {
+            margin: 2px;
+            width: 1000px;
+            height: 125px;
+            resize: none;
+            color: white;
+            font-size: 15px;
+            background: rgba(40, 42, 54, 255);
+            border: 2px solid rgb(26, 18, 18);
+            border-radius: 10px;
+            box-shadow: 5px 10px 18px rgba(40, 42, 54, 255)
+        }
+
+        img {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 70px;
+            border-radius: 5px;
+            border: thin 2px white;
+        }
+
+        .icon {
+            position: absolute;
+            bottom: 10px;
+            left: 90%;
+            transform: translateX(-50%);
+            border: solid white;
+            background: #fff;
+            height: 40px;
+            width: 40px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        /* Popup styles */
+        .popup {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f3f4f6;
+            width: 90vh;
+            /* Set width to 50% of viewport height */
+            height: 90vh;
+            /* Set height to 50% of viewport height */
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            z-index: 999;
+            box-shadow: 5px 5px black;
+        }
+
+        .popup-bar {
+            padding: 10px;
+        }
+
+        .popup-content {
+            margin-top: 600px;
+            padding: 0px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-direction: column;
+        }
+
+        .close-button {
+            cursor: pointer;
+            color: black;
+        }
+
+        .close-button:hover {
+            color: red;
+        }
+
+        .ask-me-anything-bar {
+            width: 350px;
+            height: 30px;
+            background-color: #e5e7eb;
+            border-radius: 20px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin-bottom: 10px;
+        }
+
+        .send-message-arrow {
+            width: 45px;
+            height: 40px;
+            border-radius: 50px;
+            border: thin black;
+            display: flex;
+            align-items: end;
+            justify-content: end;
+            /* margin-top: 10px; */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="left">
+                <div class="code-container">
+                    <textarea id="editor">
+#include <stdio.h>
+int main() {
+    printf("Hello, World!");
+    return 0;
+}
+</textarea>
+                    <div class="icon" onclick="openPopup()"></div>
+                </div>
+            </div>
+            <div class="separator"></div>
+            <div class="right" id="right"></div>
+        </div>
+        <div class="textarea-container">
+            <img src="input.jpg" alt="Input">
+            <textarea class="textarea"></textarea>
+            <button></button>
+            <img src="output.jpg" alt="Output">
+            <textarea class="textarea"></textarea>
+        </div>
+    </div>
+
+    <!-- Popup content -->
+    <div class="popup" id="popup" style="display: none;">
+        <div class="popup-bar">
+            <!-- <span>Ask Me Anything</span> -->
+            <span class="close-button" onclick="closePopup()">X</span>
+        </div>
+        <div class="popup-content">
+            <textarea class="ask-me-anything-bar" style="resize: none;" placeholder="Ask me anything..."></textarea>
+            <img src="arrow.png" alt="Send Message Arrow" class="send-message-arrow">
+        </div>
+    </div>
+
+    <script src="codemirror/lib/codemirror.js"></script>
+    <script src="codemirror/mode/clike/clike.js"></script>
+    <script src="codemirror/addon/edit/closebrackets.js"></script>
+    <script>
+        var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: "text/x-c++src",
+            theme: "dracula",
+            lineNumbers: true,
+            autoCloseBrackets: true,
+        });
+
+        const separator = document.querySelector('.separator');
+        const left = document.querySelector('.left');
+        const right = document.querySelector('.right');
+
+        let isResizing = false;
+
+        separator.addEventListener('mousedown', function (e) {
+            isResizing = true;
+            document.addEventListener('mousemove', resize);
+        });
+
+        document.addEventListener('mouseup', function () {
+            isResizing = false;
+            document.removeEventListener('mousemove', resize);
+        });
+
+        function resize(e) {
+            if (isResizing) {
+                const leftWidth = left.getBoundingClientRect().width;
+                const separatorWidth = separator.getBoundingClientRect().width;
+                const sidebarWidth = document.querySelector('.sidebar').getBoundingClientRect().width;
+
+                const newRightWidth = sidebarWidth - e.clientX + left.getBoundingClientRect().left - separatorWidth / 2;
+
+                const minWidth = 150;
+                const newRightWidthPx = Math.max(minWidth, newRightWidth) + 'px';
+
+                right.style.width = newRightWidthPx;
+            }
+        }
+
+        function adjustCodeMirrorHeight() {
+            const leftHeight = left.getBoundingClientRect().height;
+            editor.setSize(null, leftHeight);
+        }
+
+        window.addEventListener('resize', adjustCodeMirrorHeight);
+        adjustCodeMirrorHeight();
+
+        function openPopup() {
+            document.getElementById('popup').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>
